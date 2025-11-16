@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Галерея фотографий собак</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .gallery {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .gallery__header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .gallery__title {
+      color: white;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .gallery__button {
+      background: white;
+      color: #667eea;
+      border: none;
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .gallery__button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      background: #f8f9fa;
+    }
+
+    .gallery__button:active {
+      transform: translateY(0);
+    }
+
+    .gallery__error {
+      background: #ff4757;
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      text-align: center;
+      display: none;
+    }
+
+    .gallery__error--visible {
+      display: block;
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .loader--visible {
+      display: block;
+    }
+
+    .loader__spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    .loader__text {
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .gallery__grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .gallery__item {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .gallery__item:hover {
+      transform: translateY(-5px);
+    }
+
+    .gallery__image {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      display: block;
+    }
+
+    @media (max-width: 1024px) {
+      .gallery__grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .gallery__grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+
+      .gallery__title {
+        font-size: 2rem;
+      }
+
+      .gallery__image {
+        height: 200px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .gallery__grid {
+        grid-template-columns: 1fr;
+      }
+
+      .gallery__title {
+        font-size: 1.5rem;
+      }
+
+      .gallery__button {
+        padding: 12px 30px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="gallery">
+    <div class="gallery__header">
+      <h1 class="gallery__title">🐕 Галерея фотографий собак</h1>
+      <button class="gallery__button" id="loadButton">Загрузить картинки</button>
+    </div>
+
+    <div class="gallery__error" id="errorMessage"></div>
+
+    <div class="loader" id="loader">
+      <div class="loader__spinner"></div>
+      <p class="loader__text">Загрузка изображений...</p>
+    </div>
+
+    <div class="gallery__grid" id="galleryGrid"></div>
+  </div>
+
+  <script>
+    const API_URL = "https://api.thedogapi.com/v1/images/search?limit=20";
+
+    const loadButton = document.getElementById("loadButton");
+    const galleryGrid = document.getElementById("galleryGrid");
+    const loader = document.getElementById("loader");
+    const errorMessage = document.getElementById("errorMessage");
+
+    // Показать лоадер
+    function showLoader() {
+      loader.classList.add("loader--visible");
+    }
+
+    // Скрыть лоадер
+    function hideLoader() {
+      loader.classList.remove("loader--visible");
+    }
+
+    // Показать ошибку
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.add("gallery__error--visible");
+    }
+
+    // Скрыть ошибку
+    function hideError() {
+      errorMessage.classList.remove("gallery__error--visible");
+    }
+
+    // Очистить галерею
+    function clearGallery() {
+      galleryGrid.innerHTML = "";
+    }
+
+    // Отрисовать галерею
+    function renderGallery(imageUrls) {
+      imageUrls.forEach((url) => {
+        const item = document.createElement("div");
+        item.className = "gallery__item";
+
+        const img = document.createElement("img");
+        img.className = "gallery__image";
+        img.src = url;
+        img.alt = "Фотография собаки";
+
+        item.appendChild(img);
+        galleryGrid.appendChild(item);
+      });
+    }
+
+    // Загрузить изображения с API
+    async function loadImages() {
+      hideError();
+      clearGallery();
+      showLoader();
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "GET",
+          mode: "cors"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Ошибка HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error("Некорректный формат ответа API");
+        }
+
+        const imageUrls = data.map(item => item.url);
+        renderGallery(imageUrls);
+      } catch (error) {
+        const errorMsg = error.name === "TypeError" && error.message.includes("fetch")
+          ? "Не удалось подключиться к серверу. Проверьте интернет-соединение."
+          : `Не удалось загрузить изображения: ${error.message}`;
+        showError(errorMsg);
+        console.error("Ошибка загрузки:", error);
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // Обработчик клика по кнопке
+    loadButton.addEventListener("click", loadImages);
+  </script>
+</body>
+</html>
